@@ -2,13 +2,9 @@
 
 A client-side web interface for [PluralKit](https://pluralkit.me/). View and manage your system, members, groups, switches, and more directly from your browser.
 
-**No server. No account. No data leaves your device** (except to the PluralKit API and ImgBB if you configure it).
-
----
-
 ## Getting Started
 
-1. Open the website. 
+1. Open the website. https://myrieons.github.io/MyrosKit/
 2. Get your PluralKit token by DMing the PluralKit bot on Discord with `pk;token`.
 3. Paste your token into the login screen and click **Sign in**.
 
