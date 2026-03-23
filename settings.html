@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script src="theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MYROSKIT — Settings</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -91,6 +92,151 @@
 
   /* ── Settings ── */
   .settings-stack { display: flex; flex-direction: column; gap: 10px; }
+
+  /* ── Theme picker ── */
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    padding: 14px 18px 16px;
+  }
+
+  .theme-swatch {
+    position: relative;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.15s, transform 0.1s;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    text-align: left;
+  }
+  .theme-swatch:hover { transform: translateY(-1px); }
+  .theme-swatch.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+
+  .theme-swatch-preview {
+    height: 44px;
+    display: flex;
+  }
+  .theme-swatch-preview span {
+    flex: 1;
+  }
+
+  .theme-swatch-label {
+    padding: 7px 9px 8px;
+    background: var(--bg-tertiary);
+  }
+  .theme-swatch-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: block;
+  }
+  .theme-swatch-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .theme-swatch-check {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .theme-swatch.active .theme-swatch-check { opacity: 1; }
+
+  /* ── Fronter tint toggle ── */
+  .toggle-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .toggle-info { flex: 1; min-width: 0; }
+  .toggle-label {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    margin-bottom: 3px; display: flex; align-items: center; gap: 8px;
+  }
+  .toggle-label-badge {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 2px 6px; border-radius: 3px;
+    background: rgba(var(--accent-rgb), 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .toggle-label-badge.visible { opacity: 1; }
+  .toggle-desc { font-size: 12px; color: var(--text-muted); line-height: 1.45; }
+
+  .toggle-switch {
+    position: relative; width: 42px; height: 24px; flex-shrink: 0;
+  }
+  .toggle-switch input {
+    opacity: 0; width: 0; height: 0; position: absolute;
+  }
+  .toggle-track {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    left: 3px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: left 0.2s, background 0.2s;
+  }
+  .toggle-switch input:checked + .toggle-track {
+    background: rgba(var(--accent-rgb), 0.25);
+    border-color: rgba(var(--accent-rgb), 0.5);
+  }
+  .toggle-switch input:checked + .toggle-track::after {
+    left: calc(100% - 19px);
+    background: var(--accent);
+  }
+  .toggle-switch input:focus-visible + .toggle-track {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* fronter color preview pill shown when tint is active */
+  .fronter-color-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    border-radius: 99px; padding: 2px 8px 2px 5px;
+    margin-top: 5px;
+    opacity: 0; transition: opacity 0.2s;
+    width: fit-content;
+  }
+  .fronter-color-pill.visible { opacity: 1; }
+  .fronter-color-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0;
+  }
 
   .settings-section {
     background: var(--bg-secondary); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -271,6 +417,32 @@
   </div>
 
   <div class="settings-stack">
+
+    <!-- Appearance -->
+    <div class="settings-section" id="theme-section">
+      <div class="settings-section-title">Appearance</div>
+      <div class="theme-grid" id="theme-grid">
+        <!-- populated by JS -->
+      </div>
+      <!-- Fronter tint toggle -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">
+            Fronter color tint
+            <span class="toggle-label-badge" id="tint-active-badge">Active</span>
+          </div>
+          <div class="toggle-desc">Tints the accent color and background with the current fronter's member color. Updates automatically when the fronter changes.</div>
+          <div class="fronter-color-pill" id="fronter-pill">
+            <div class="fronter-color-dot" id="fronter-pill-dot"></div>
+            <span id="fronter-pill-label">No color set</span>
+          </div>
+        </div>
+        <label class="toggle-switch" title="Toggle fronter color tint">
+          <input type="checkbox" id="fronter-tint-toggle" onchange="onFronterTintToggle(this.checked)">
+          <div class="toggle-track"></div>
+        </label>
+      </div>
+    </div>
 
     <!-- ImgBB -->
     <div class="settings-section" style="animation-delay:0.02s">
@@ -505,6 +677,9 @@ async function boot() {
 
     renderSystemCard(system);
     renderFronterCard(fronter);
+    // Refresh tint UI with fresh fronter data
+    if (window.MKTheme) window.MKTheme.refreshFronterColor();
+    updateFronterTintUI();
   } catch (e) {
     if (e.message?.includes('401') || e.message?.includes('403')) {
       sessionStorage.removeItem('pk_token');
@@ -515,7 +690,84 @@ async function boot() {
 
 function logout() { sessionStorage.removeItem('pk_token'); window.location.href = 'index.html'; }
 
-// ── ImgBB key management ──────────────────────────────────
+// ── Theme picker ─────────────────────────────────────────────
+(function () {
+  const grid = document.getElementById('theme-grid');
+  if (!grid || !window.MKTheme) return;
+
+  function renderGrid() {
+    const current = MKTheme.current;
+    grid.innerHTML = '';
+    for (const [id, theme] of Object.entries(MKTheme.THEMES)) {
+      const btn = document.createElement('button');
+      btn.className = 'theme-swatch' + (id === current ? ' active' : '');
+      btn.setAttribute('aria-label', theme.label);
+      btn.setAttribute('data-theme-id', id);
+      btn.innerHTML = `
+        <div class="theme-swatch-preview">
+          ${theme.preview.map(c => `<span style="background:${c}"></span>`).join('')}
+        </div>
+        <div class="theme-swatch-label">
+          <span class="theme-swatch-name">${theme.label}</span>
+          <span class="theme-swatch-desc">${theme.description}</span>
+        </div>
+        <div class="theme-swatch-check">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+            <path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>`;
+      btn.addEventListener('click', () => { MKTheme.set(id); });
+      grid.appendChild(btn);
+    }
+  }
+
+  renderGrid();
+  window.addEventListener('mkthemechange', () => { renderGrid(); });
+})();
+
+
+// ── Fronter tint toggle ─────────────────────────────────────
+function onFronterTintToggle(enabled) {
+  if (window.MKTheme) window.MKTheme.setFronterTint(enabled);
+  updateFronterTintUI();
+}
+
+function updateFronterTintUI() {
+  const enabled = window.MKTheme ? window.MKTheme.fronterTint : false;
+  const toggle = document.getElementById('fronter-tint-toggle');
+  const badge  = document.getElementById('tint-active-badge');
+  const pill   = document.getElementById('fronter-pill');
+  const dot    = document.getElementById('fronter-pill-dot');
+  const label  = document.getElementById('fronter-pill-label');
+  if (toggle) toggle.checked = enabled;
+  if (badge)  badge.classList.toggle('visible', enabled);
+
+  // Show current fronter color pill
+  try {
+    const raw = sessionStorage.getItem('pk_cache');
+    if (raw) {
+      const cache = JSON.parse(raw);
+      const fl = Array.isArray(cache.fronter) ? cache.fronter : (cache.fronter ? [cache.fronter] : []);
+      const fc = fl[0] && fl[0].color ? '#' + fl[0].color.replace('#','') : null;
+      const name = fl[0] ? (fl[0].display_name || fl[0].name || '') : '';
+      if (fc && /^#[0-9a-fA-F]{6}$/.test(fc)) {
+        if (dot) dot.style.background = fc;
+        if (label) label.textContent = (name ? name + ' — ' : '') + fc;
+        if (pill) pill.classList.toggle('visible', enabled);
+      } else {
+        if (pill) pill.classList.remove('visible');
+      }
+    }
+  } catch(e) {}
+}
+
+// Init on load
+updateFronterTintUI();
+// Re-sync if fronter data arrives after boot
+window.addEventListener('mkfrontertintchange', updateFronterTintUI);
+// Re-sync when fronter changes (detected by the tint poll)
+window.addEventListener('mkfronterchanged', updateFronterTintUI);
+
 const IMGBB_KEY = 'imgbb_api_key';
 
 function loadImgbbKey() {

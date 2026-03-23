@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script src="theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MYROSKIT — Journal</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root {
     --bg-primary: #0d0d0f;
@@ -327,6 +329,7 @@
 
   /* add button */
   .add-row { padding: 0 16px 16px; }
+  .hs-toolbar { display: flex; align-items: center; justify-content: flex-end; padding: 10px 16px 0; }
   .add-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px dashed rgba(255,255,255,0.1); border-radius: var(--radius-sm); color: var(--text-muted); font-family: inherit; font-size: 12px; font-weight: 600; padding: 9px 14px; cursor: pointer; width: 100%; transition: border-color 0.1s, color 0.1s, background 0.1s; }
   .add-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text-secondary); background: rgba(255,255,255,0.02); }
 
@@ -381,6 +384,14 @@
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
   * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+
+  .btn-download {
+    background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-muted); font-family: inherit; font-size: 11px; font-weight: 600;
+    padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+    transition: color 0.1s, border-color 0.1s, background 0.1s; white-space: nowrap; flex-shrink: 0;
+  }
+  .btn-download:hover { color: var(--text-primary); border-color: rgba(255,255,255,0.18); background: var(--bg-hover); }
 
   @media (max-width: 700px) {
     .journal-body { grid-template-columns: 1fr; }
@@ -482,6 +493,15 @@
             <input type="text" class="search-input" id="journal-search" placeholder="Search entries…" oninput="filterEntries()">
             <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
             <button class="filter-pill" onclick="setFilter('mine',this)">Mine</button>
+            <button class="btn-download" onclick="downloadAllZip()" title="Download all entries as ZIP">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              ZIP
+            </button>
+            <button class="btn-download" onclick="document.getElementById('import-journal-file').click()" title="Import entries from .txt or .zip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Import
+            </button>
+            <input type="file" id="import-journal-file" accept=".txt,.zip" multiple style="display:none" onchange="importJournalFiles(this)">
           </div>
           <div class="entries-list" id="entries-list"></div>
           <div class="pagination" id="pagination" style="display:none;"></div>
@@ -514,6 +534,17 @@
 
       <!-- Locations -->
       <div class="hs-panel active" id="hs-panel-locations">
+        <div class="hs-toolbar">
+          <button class="btn-download" onclick="downloadHsZip('locations')" title="Download all locations as ZIP">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download all
+          </button>
+          <button class="btn-download" onclick="document.getElementById('import-loc-file').click()" title="Import locations from .txt or .zip">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import
+          </button>
+          <input type="file" id="import-loc-file" accept=".txt,.zip" multiple style="display:none" onchange="importHsFiles(this,'locations')">
+        </div>
         <div class="cards-grid" id="locations-list"></div>
         <div class="add-row">
           <button class="add-btn" onclick="openLocModal()">
@@ -525,6 +556,17 @@
 
       <!-- Roles & Info -->
       <div class="hs-panel" id="hs-panel-roles">
+        <div class="hs-toolbar">
+          <button class="btn-download" onclick="downloadHsZip('roles')" title="Download all roles as ZIP">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download all
+          </button>
+          <button class="btn-download" onclick="document.getElementById('import-roles-file').click()" title="Import roles from .txt or .zip">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import
+          </button>
+          <input type="file" id="import-roles-file" accept=".txt,.zip" multiple style="display:none" onchange="importHsFiles(this,'roles')">
+        </div>
         <div class="cards-grid" id="roles-list"></div>
         <div class="add-row">
           <button class="add-btn" onclick="openRoleModal()">
@@ -536,6 +578,17 @@
 
       <!-- Notes (last) -->
       <div class="hs-panel" id="hs-panel-notes">
+        <div class="hs-toolbar">
+          <button class="btn-download" onclick="downloadHsZip('notes')" title="Download all notes as ZIP">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download all
+          </button>
+          <button class="btn-download" onclick="document.getElementById('import-notes-file').click()" title="Import notes from .txt or .zip">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import
+          </button>
+          <input type="file" id="import-notes-file" accept=".txt,.zip" multiple style="display:none" onchange="importHsFiles(this,'notes')">
+        </div>
         <div class="cards-grid" id="headspace-list"></div>
         <div class="add-row">
           <button class="add-btn" onclick="openHsModal()">
@@ -944,6 +997,7 @@ function renderEntries(){
       <div class="entry-full" style="display:none;font-size:13px;line-height:1.65;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word;">${esc(e.text)}</div>
       <div class="entry-actions">
         <button class="entry-action-btn" onclick="openEditEntry('${e.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+        <button class="entry-action-btn" onclick="downloadEntry('${e.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</button>
         <button class="entry-action-btn danger" onclick="delEntry('${e.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg> Delete</button>
       </div>`;
     list.appendChild(el);
@@ -961,6 +1015,279 @@ function toggleEntry(el){
   el.querySelector('.entry-full').style.display=isExp?'':'none';
 }
 function delEntry(id){entries=entries.filter(e=>e.id!==id);saveJ();if(currentPage>Math.ceil((filteredEntries.length-1)/PER_PAGE)&&currentPage>1)currentPage--;renderEntries();}
+
+/* ── Downloads ── */
+function entryToText(e) {
+  const m = allMembers.find(x => x.id === e.authorId);
+  const author = m ? (m.display_name || m.name) : 'System';
+  const date = new Date(e.ts).toLocaleString('en-US', { dateStyle:'long', timeStyle:'short' });
+  const tags = e.tags.length ? e.tags.map(tid => { const t = customTags.find(x=>x.id===tid); return t ? t.label : tid; }).join(', ') : 'none';
+  return `Date: ${date}\nAuthor: ${author}\nTags: ${tags}\n\n${e.text}\n`;
+}
+
+function entryFilename(e) {
+  const m = allMembers.find(x => x.id === e.authorId);
+  const author = m ? (m.display_name || m.name) : 'system';
+  const d = new Date(e.ts);
+  const datePart = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const safe = author.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  return `${datePart}_${safe}.txt`;
+}
+
+function downloadEntry(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  const blob = new Blob([entryToText(e)], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = entryFilename(e);
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+async function downloadAllZip() {
+  if (!entries.length) return;
+  const zip = new JSZip();
+  const seen = {};
+  entries.forEach(e => {
+    let name = entryFilename(e);
+    if (seen[name]) { seen[name]++; name = name.replace('.txt', `_${seen[name]}.txt`); } else { seen[name] = 1; }
+    zip.file(name, entryToText(e));
+  });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'journal_entries.zip';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── Headspace downloads ── */
+function safeFilename(str) {
+  return (str||'untitled').replace(/[^a-z0-9]/gi,'_').toLowerCase().slice(0,40);
+}
+
+function locationToText(loc) {
+  const members = loc.memberIds.map(id=>{const m=allMembers.find(x=>x.id===id);return m?(m.display_name||m.name):id;}).join(', ') || 'none';
+  return `Location: ${loc.name}\n\n${loc.desc||'No description.'}\n\nResidents: ${members}\n`;
+}
+
+function noteToText(n) {
+  const members = n.memberIds?.map(id=>{const m=allMembers.find(x=>x.id===id);return m?(m.display_name||m.name):id;}).join(', ') || 'none';
+  return `Note: ${n.title}\nCategory: ${n.cat||'general'}\nLinked members: ${members}\n\n${n.body}\n`;
+}
+
+function roleToText(r) {
+  const members = r.memberIds?.map(id=>{const m=allMembers.find(x=>x.id===id);return m?(m.display_name||m.name):id;}).join(', ') || 'none';
+  return `Role / Info: ${r.title}\nCategory: ${r.cat||'role'}\nMembers: ${members}\n\n${r.body}\n`;
+}
+
+function downloadHsItem(type, id) {
+  let item, text, filename;
+  if (type === 'location') {
+    item = locations.find(x=>x.id===id); if (!item) return;
+    text = locationToText(item); filename = `location_${safeFilename(item.name)}.txt`;
+  } else if (type === 'note') {
+    item = hsNotes.find(x=>x.id===id); if (!item) return;
+    text = noteToText(item); filename = `note_${safeFilename(item.title)}.txt`;
+  } else if (type === 'role') {
+    item = roles.find(x=>x.id===id); if (!item) return;
+    text = roleToText(item); filename = `role_${safeFilename(item.title)}.txt`;
+  }
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+async function downloadHsZip(section) {
+  let items, toText, prefix, zipName;
+  if (section === 'locations') {
+    items = locations; toText = locationToText; prefix = 'location'; zipName = 'locations.zip';
+  } else if (section === 'notes') {
+    items = hsNotes; toText = noteToText; prefix = 'note'; zipName = 'headspace_notes.zip';
+  } else if (section === 'roles') {
+    items = roles; toText = roleToText; prefix = 'role'; zipName = 'roles_info.zip';
+  }
+  if (!items?.length) return;
+  const zip = new JSZip();
+  const seen = {};
+  items.forEach(item => {
+    let name = `${prefix}_${safeFilename(item.name||item.title)}.txt`;
+    if (seen[name]) { seen[name]++; name = name.replace('.txt', `_${seen[name]}.txt`); } else { seen[name] = 1; }
+    zip.file(name, toText(item));
+  });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = zipName; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── Import ── */
+
+// Read a File as text
+function readText(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsText(file);
+  });
+}
+
+// Parse a journal entry .txt (format: "Date: ...\nAuthor: ...\nTags: ...\n\n<body>")
+function parseJournalTxt(text) {
+  const lines = text.split('\n');
+  let authorName = '', tags = [], bodyStart = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (l.startsWith('Author: ')) authorName = l.slice(8).trim();
+    else if (l.startsWith('Tags: ')) {
+      const raw = l.slice(6).trim();
+      if (raw && raw !== 'none') tags = raw.split(',').map(t => t.trim()).filter(Boolean);
+    } else if (l === '' && i > 0 && lines[i-1] === '') { bodyStart = i + 1; break; }
+    else if (l === '' && lines[i+1] !== undefined && !lines[i+1].startsWith('Date:') && !lines[i+1].startsWith('Author:') && !lines[i+1].startsWith('Tags:')) {
+      bodyStart = i + 1; break;
+    }
+  }
+  const body = lines.slice(bodyStart).join('\n').trim();
+  if (!body) return null;
+
+  // Resolve tags — match label to id, or create
+  const resolvedTags = tags.map(label => {
+    const found = customTags.find(t => t.label === label);
+    if (found) return found.id;
+    // add new tag
+    const id = 'tag_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    customTags.push({ id, label, color: PALETTE[customTags.length % PALETTE.length] });
+    saveTags(); renderComposeTags();
+    return id;
+  });
+
+  // Try to resolve author name to member id
+  const m = allMembers.find(x => (x.display_name || x.name || '').toLowerCase() === authorName.toLowerCase());
+
+  return { id: 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), authorId: m?.id || null, text: body, tags: resolvedTags, ts: Date.now() };
+}
+
+// Parse location .txt
+function parseLocationTxt(text) {
+  const lines = text.split('\n');
+  let name = '', bodyStart = 0;
+  if (lines[0].startsWith('Location: ')) name = lines[0].slice(10).trim();
+  // body is from line 2 onwards until "Residents:"
+  const residentsIdx = lines.findIndex(l => l.startsWith('Residents:'));
+  const bodyEnd = residentsIdx > -1 ? residentsIdx : lines.length;
+  const desc = lines.slice(2, bodyEnd).join('\n').trim();
+  if (!name) return null;
+  return { id: 'l_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), name, desc, icon: 'home', memberIds: [] };
+}
+
+// Parse note .txt
+function parseNoteTxt(text) {
+  const lines = text.split('\n');
+  let title = '', cat = 'general', bodyStart = 0;
+  if (lines[0].startsWith('Note: ')) title = lines[0].slice(6).trim();
+  if (lines[1] && lines[1].startsWith('Category: ')) cat = lines[1].slice(10).trim();
+  // body starts after "Linked members:" blank line
+  const blankIdx = lines.findIndex((l, i) => i > 2 && l === '');
+  bodyStart = blankIdx > -1 ? blankIdx + 1 : 4;
+  const body = lines.slice(bodyStart).join('\n').trim();
+  if (!title) return null;
+  return { id: 'hs_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), title, cat, body, color: PALETTE[0], memberIds: [] };
+}
+
+// Parse role .txt
+function parseRoleTxt(text) {
+  const lines = text.split('\n');
+  let title = '', cat = 'role', bodyStart = 0;
+  if (lines[0].startsWith('Role / Info: ')) title = lines[0].slice(13).trim();
+  if (lines[1] && lines[1].startsWith('Category: ')) cat = lines[1].slice(10).trim();
+  const blankIdx = lines.findIndex((l, i) => i > 2 && l === '');
+  bodyStart = blankIdx > -1 ? blankIdx + 1 : 4;
+  const body = lines.slice(bodyStart).join('\n').trim();
+  if (!title) return null;
+  return { id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), title, cat, body, color: PALETTE[2], memberIds: [] };
+}
+
+async function importJournalFiles(input) {
+  const files = [...input.files];
+  if (!files.length) return;
+  let imported = 0;
+
+  for (const file of files) {
+    if (file.name.endsWith('.zip')) {
+      const zip = await JSZip.loadAsync(file);
+      for (const [fname, zf] of Object.entries(zip.files)) {
+        if (!zf.dir && fname.endsWith('.txt')) {
+          const text = await zf.async('text');
+          const entry = parseJournalTxt(text);
+          if (entry) { entries.unshift(entry); imported++; }
+        }
+      }
+    } else if (file.name.endsWith('.txt')) {
+      const text = await readText(file);
+      const entry = parseJournalTxt(text);
+      if (entry) { entries.unshift(entry); imported++; }
+    }
+  }
+
+  if (imported) {
+    saveJ(); currentPage = 1; renderEntries();
+    showImportToast(`Imported ${imported} journal entr${imported === 1 ? 'y' : 'ies'}`);
+  }
+  input.value = '';
+}
+
+async function importHsFiles(input, section) {
+  const files = [...input.files];
+  if (!files.length) return;
+  let imported = 0;
+
+  const parseFn = section === 'locations' ? parseLocationTxt : section === 'notes' ? parseNoteTxt : parseRoleTxt;
+  const arr = section === 'locations' ? locations : section === 'notes' ? hsNotes : roles;
+  const saveFn = section === 'locations' ? saveL : section === 'notes' ? saveH : saveR;
+  const renderFn = section === 'locations' ? renderLocations : section === 'notes' ? renderHsNotes : renderRoles;
+
+  for (const file of files) {
+    if (file.name.endsWith('.zip')) {
+      const zip = await JSZip.loadAsync(file);
+      for (const [fname, zf] of Object.entries(zip.files)) {
+        if (!zf.dir && fname.endsWith('.txt')) {
+          const text = await zf.async('text');
+          const item = parseFn(text);
+          if (item) { arr.push(item); imported++; }
+        }
+      }
+    } else if (file.name.endsWith('.txt')) {
+      const text = await readText(file);
+      const item = parseFn(text);
+      if (item) { arr.push(item); imported++; }
+    }
+  }
+
+  if (imported) {
+    saveFn(); renderFn();
+    const label = section === 'locations' ? 'location' : section === 'notes' ? 'note' : 'role';
+    showImportToast(`Imported ${imported} ${label}${imported === 1 ? '' : 's'}`);
+  }
+  input.value = '';
+}
+
+// Toast notification for import feedback
+function showImportToast(msg) {
+  let toast = document.getElementById('import-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'import-toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e1f22;border:1px solid rgba(255,255,255,0.14);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:13px;font-weight:600;padding:10px 20px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.5);transition:opacity 0.3s;pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+}
 
 function openEditEntry(id){
   const e=entries.find(x=>x.id===id);if(!e)return;
@@ -992,7 +1319,7 @@ function renderLocations(){
     const extra=loc.memberIds.length>4?`<span class="loc-pip-count">+${loc.memberIds.length-4}</span>`:'';
     const expandMembers=loc.memberIds.map(mid=>{const m=allMembers.find(x=>x.id===mid);if(!m)return'';const nm=m.display_name||m.name||'?';const bg=m.color?`background:#${m.color}44;`:'';const av=m.avatar_url?`<div class="chip-av"><img src="${m.avatar_url}"></div>`:`<div class="chip-av" style="${bg}">${esc(nm.charAt(0))}</div>`;return`<div class="member-chip">${av}${esc(nm)}</div>`;}).join('');
     const card=document.createElement('div');card.className='location-card';card.style.animationDelay=`${i*0.04}s`;
-    card.innerHTML=`<div class="location-main" onclick="this.parentElement.classList.toggle('expanded')"><div class="location-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${iconDef.svg}</svg></div><div class="location-info"><div class="location-name">${esc(loc.name)}</div><div class="location-desc-short">${esc(loc.desc||'No description')}</div></div><div class="loc-pips">${pips}${extra}</div><button class="icon-btn" onclick="event.stopPropagation();openLocModal('${loc.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div><div class="location-expand"><div class="loc-expand-body">${esc(loc.desc||'No description added yet.')}</div>${loc.memberIds.length?`<div class="loc-expand-members">${expandMembers}</div>`:''}</div>`;
+    card.innerHTML=`<div class="location-main" onclick="this.parentElement.classList.toggle('expanded')"><div class="location-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${iconDef.svg}</svg></div><div class="location-info"><div class="location-name">${esc(loc.name)}</div><div class="location-desc-short">${esc(loc.desc||'No description')}</div></div><div class="loc-pips">${pips}${extra}</div><button class="icon-btn" onclick="event.stopPropagation();downloadHsItem('location','${loc.id}')" title="Download location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="icon-btn" onclick="event.stopPropagation();openLocModal('${loc.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div><div class="location-expand"><div class="loc-expand-body">${esc(loc.desc||'No description added yet.')}</div>${loc.memberIds.length?`<div class="loc-expand-members">${expandMembers}</div>`:''}</div>`;
     list.appendChild(card);
   });
 }
@@ -1027,7 +1354,7 @@ function renderHsNotes(){
   hsNotes.forEach((n,i)=>{
     const linked=n.memberIds?.length?`<div class="hs-linked"><span class="hs-linked-label">Linked</span>${n.memberIds.map(mid=>{const m=allMembers.find(x=>x.id===mid);if(!m)return'';const nm=m.display_name||m.name||'?';const bg=m.color?`background:#${m.color}44;`:'';const av=m.avatar_url?`<div class="chip-av-sm"><img src="${m.avatar_url}"></div>`:`<div class="chip-av-sm" style="${bg}">${esc(nm.charAt(0))}</div>`;return`<div class="sm-chip">${av}${esc(nm)}</div>`;}).join('')}</div>`:'';
     const card=document.createElement('div');card.className='hs-card';card.style.animationDelay=`${i*0.04}s`;
-    card.innerHTML=`<div class="hs-card-header"><div class="hs-dot" style="background:${n.color||'#80848e'}"></div><div class="hs-card-title">${esc(n.title)}</div><div class="hs-cat-badge">${esc(n.cat||'general')}</div><button class="icon-btn" onclick="openHsModal('${n.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div><div class="hs-card-body">${esc(n.body)}</div>${linked}`;
+    card.innerHTML=`<div class="hs-card-header"><div class="hs-dot" style="background:${n.color||'#80848e'}"></div><div class="hs-card-title">${esc(n.title)}</div><div class="hs-cat-badge">${esc(n.cat||'general')}</div><button class="icon-btn" onclick="downloadHsItem('note','${n.id}')" title="Download note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="icon-btn" onclick="openHsModal('${n.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div><div class="hs-card-body">${esc(n.body)}</div>${linked}`;
     list.appendChild(card);
   });
 }
@@ -1062,7 +1389,7 @@ function renderRoles(){
   roles.forEach((r,i)=>{
     const linked=r.memberIds?.length?`<div class="hs-linked"><span class="hs-linked-label">Members</span>${r.memberIds.map(mid=>{const m=allMembers.find(x=>x.id===mid);if(!m)return'';const nm=m.display_name||m.name||'?';const bg=m.color?`background:#${m.color}44;`:'';const av=m.avatar_url?`<div class="chip-av-sm"><img src="${m.avatar_url}"></div>`:`<div class="chip-av-sm" style="${bg}">${esc(nm.charAt(0))}</div>`;return`<div class="sm-chip">${av}${esc(nm)}</div>`;}).join('')}</div>`:'';
     const card=document.createElement('div');card.className='hs-card';card.style.animationDelay=`${i*0.04}s`;
-    card.innerHTML=`<div class="hs-card-header"><div class="hs-dot" style="background:${r.color||'#80848e'}"></div><div class="hs-card-title">${esc(r.title)}</div><div class="hs-cat-badge">${esc(r.cat||'role')}</div><button class="icon-btn" onclick="openRoleModal('${r.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div><div class="hs-card-body">${esc(r.body)}</div>${linked}`;
+    card.innerHTML=`<div class="hs-card-header"><div class="hs-dot" style="background:${r.color||'#80848e'}"></div><div class="hs-card-title">${esc(r.title)}</div><div class="hs-cat-badge">${esc(r.cat||'role')}</div><button class="icon-btn" onclick="downloadHsItem('role','${r.id}')" title="Download role"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="icon-btn" onclick="openRoleModal('${r.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div><div class="hs-card-body">${esc(r.body)}</div>${linked}`;
     list.appendChild(card);
   });
 }
